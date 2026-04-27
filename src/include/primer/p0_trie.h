@@ -290,7 +290,10 @@ class Trie {
    */
   template <typename T>
   bool Insert(const std::string &key, T value) {
+    latch_.WLock();
+
     if (key.empty()) {
+      latch_.WUnlock();
       return false;
     }
 
@@ -301,6 +304,7 @@ class Trie {
       target_key_it++;
     }
     if (target_node != nullptr && target_key_it == key.end()) {
+      latch_.WUnlock();
       return false;
     }
 
@@ -311,13 +315,14 @@ class Trie {
           std::unique_ptr<TrieNode> child_node = std::make_unique<TrieNode>(*target_key_it);
           parent_node->InsertChildNode(*target_key_it, std::move(child_node));
         }
-	parent_node = parent_node->GetChildNode(*target_key_it)->get();
-	target_key_it++;
+	    parent_node = parent_node->GetChildNode(*target_key_it)->get();
+	    target_key_it++;
     }
 
-    if (parent_node->HasChildren()) {
+    if (parent_node->HasChild(*(key.end() - 1))) {
       TrieNode *child_node = parent_node->GetChildNode(*(key.end() - 1))->get();
       if (child_node->IsEndNode()) {
+        latch_.WUnlock();
         return false;
       }
       std::unique_ptr<TrieNodeWithValue<T>> child_val_node = 
@@ -328,6 +333,7 @@ class Trie {
         std::make_unique<TrieNodeWithValue<T>>(*target_key_it, value);
       parent_node->InsertChildNode(*target_key_it, std::move(child_val_node));
     }
+    latch_.WUnlock();
     return true;
   }
 
@@ -349,10 +355,13 @@ class Trie {
    * @return True if the key exists and is removed, false otherwise
    */
   bool Remove(const std::string &key) { 
+    latch_.WLock();
+
     if (key.empty()) {
+      latch_.WUnlock();
       return false;
     }
-    
+
     auto target_key_it = key.begin();
     TrieNode *target_node = root_.get();
     while (target_node != nullptr && target_key_it != key.end()) {
@@ -360,6 +369,7 @@ class Trie {
       target_key_it++;
     }
     if (target_node == nullptr || target_key_it != key.end()) {
+      latch_.WUnlock();
       return false;
     }
 
@@ -380,6 +390,7 @@ class Trie {
       }
       target_key_it--;
     }
+    latch_.WUnlock();
     return true;
   }
 
@@ -403,8 +414,11 @@ class Trie {
    */
   template <typename T>
   T GetValue(const std::string &key, bool *success) {
+    latch_.RLock();
+
     if (key.empty()) {
       *success = false;
+      latch_.RUnlock();
       return {};
     }
     
@@ -416,17 +430,21 @@ class Trie {
     }
     if (cur == nullptr || !cur->IsEndNode()) {
        *success = false;
+       latch_.RUnlock();
        return {};
     }
 
     auto *cur_with_value = dynamic_cast<TrieNodeWithValue<T> *>(cur);
     if (cur_with_value == nullptr) {
       *success = false;
+      latch_.RUnlock();
       return {};
     }
 
     *success = true;
-    return cur_with_value->GetValue();
+    T val = cur_with_value->GetValue();
+    latch_.RUnlock();
+    return val;
   }
 };
 }  // namespace bustu
