@@ -1,0 +1,1 @@
+select distinct name from (select * from crew where title_id in (select distinct title_id from crew inner join people on people.person_id = crew.person_id and people.name like 'Rose%') and (job like '%director%' or category like '%director%')) directors inner join people on people.person_id = directors.person_id order by name asc;

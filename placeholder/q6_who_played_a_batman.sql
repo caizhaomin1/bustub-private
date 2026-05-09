@@ -1,0 +1,1 @@
+select name,  round(avg(rating), 2) as a from crew inner join titles on crew.title_id = titles.title_id left join ratings on crew.title_id = ratings.title_id inner join people on crew.person_id = people.person_id where crew.person_id in (select distinct  person_id from crew where characters like '%Batman%') group by name order by a desc limit 10;
