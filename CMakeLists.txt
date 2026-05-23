@@ -392,8 +392,4 @@ add_custom_target(submit-p4
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-<<<<<<< HEAD
-add_dependencies(check-clang-tidy gtest bustub) # needs gtest headers, compile_commands.json
-=======
-add_dependencies(check-clang-tidy gtest bustub)                    # needs gtest headers, compile_commands.json
->>>>>>> 1a67e07 (add trie concurrent  implement and fix bug)
+add_dependencies(check-clang-tidy gtest bustub)
