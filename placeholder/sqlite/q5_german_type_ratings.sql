@@ -1,0 +1,1 @@
+select type, round(avg(rating), 2), min(rating), max(rating) from ratings inner join (select titles.title_id, type from titles inner join akas on titles.title_id = akas.title_id where akas.language = 'de' and akas.types in ('imdbDisplay', 'original')) german on german.title_id = ratings.title_id group by type;

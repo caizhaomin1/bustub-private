@@ -1,0 +1,1 @@
+select primary_title, COALESCE(ended::int, EXTRACT(YEAR FROM CURRENT_DATE)::int) - premiered::int as y from titles where type='tvSeries' and premiered is not null order by y desc , primary_title desc limit 20;

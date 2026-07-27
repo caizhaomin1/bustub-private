@@ -1,0 +1,1 @@
+select ((born / 10) * 10) || 's' as decade, count(*) from (select distinct name, born::int from people as p inner join crew as c on p.person_id = c.person_id where p.born is not null and (c.category = 'director' or c.job = 'director')) sub where born >= 1900 group by decade order by decade asc;
